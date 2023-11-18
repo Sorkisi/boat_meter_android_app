@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="16dp"
+    android:paddingTop="16dp"
+    android:paddingRight="16dp"
+    android:paddingBottom="16dp">
+
+    <!-- Change this to your desired color -->
+    <LinearLayout
+        android:id="@+id/top_box"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="@color/purple_200"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/heading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="This is the text in the box"
+            android:textSize="28sp" />
+
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/top_box">
+
+        <TextView
+            android:id="@+id/commands"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hello from the new activity!"
+            android:textSize="18sp" />
+
+    </ScrollView>
+
+</RelativeLayout>
