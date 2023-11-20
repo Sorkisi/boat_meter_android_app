@@ -11,7 +11,7 @@
     <LinearLayout
         android:id="@+id/top_box"
         android:layout_width="match_parent"
-        android:layout_height="100dp"
+        android:layout_height="wrap_content"
         android:background="@color/purple_200"
         android:orientation="vertical">
 
@@ -20,8 +20,20 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="This is the text in the box"
-            android:textSize="28sp" />
+            android:textSize="20sp" />
 
+        <EditText
+            android:id="@+id/commandText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter command here" />
+
+        <Button
+            android:id="@+id/button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/commandText"
+            android:text="Send" />
     </LinearLayout>
 
     <ScrollView

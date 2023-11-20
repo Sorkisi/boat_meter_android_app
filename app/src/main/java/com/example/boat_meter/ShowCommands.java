@@ -1,14 +1,21 @@
 package com.example.boat_meter;
 
 import android.os.Bundle;
+import android.widget.EditText;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
+import android.widget.Button;
+import android.widget.Toast;
+import android.view.View;
 
 
 
 public class ShowCommands extends AppCompatActivity {
 
     String heading = "Help commands";
+
+    private EditText editText;
+    private Button button;
 
     String helpCommand = "SET1CVALUE0 Do not enter value after the command. Reset ampere value to zero for battery 1. Can be used to calibrate current measurement \n" +
             "\n" +
@@ -49,10 +56,25 @@ public class ShowCommands extends AppCompatActivity {
             getSupportActionBar().hide();
         }
 
+        editText = findViewById(R.id.commandText);
+
         TextView textViewHeading = findViewById(R.id.heading);
         textViewHeading.setText(heading);
 
         TextView textViewCommands = findViewById(R.id.commands);
         textViewCommands.setText(helpCommand);
+
+        button = (Button) findViewById(R.id.button);
+
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String text = editText.getText().toString();
+                if (!text.isEmpty()) {
+                    editText.getText().clear();
+                }
+            }
+
+        });
     }
 }
