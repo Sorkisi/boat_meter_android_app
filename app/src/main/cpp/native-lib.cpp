@@ -15,9 +15,4 @@ Java_com_example_boat_1meter_MainActivity_stringFromJNI(
     return env->NewStringUTF(hello.c_str());
 }
 
-extern "C"
-JNIEXPORT void JNICALL
-Java_com_example_boat_1meter_MainActivity_button_1handler(JNIEnv *env, jobject thiz) {
-    // TODO: implement button_handler()
-    counter++;
-}
+

@@ -9,8 +9,9 @@ import android.widget.TextView;
 import android.content.Intent;
 import android.view.View;
 import android.widget.Button;
-import androidx.appcompat.app.AppCompatActivity;
 import com.example.boat_meter.databinding.ActivityMainBinding;
+
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -18,6 +19,9 @@ public class MainActivity extends AppCompatActivity {
     static {
         System.loadLibrary("boat_meter");
     }
+
+    Battery battery1 = new Battery(3.7f, 1.5f, 2000f);
+    Battery battery2 = new Battery(12.7f, 1.5f, 2000f);
 
     private ActivityMainBinding binding;
     Button button;
@@ -28,20 +32,21 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
+
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot()); // Set the content view here
-
-        // Example of a call to a native method
-        tv = binding.sampleText;
-        tv.setText(stringFromJNI());
 
         button = findViewById(R.id.commands_button);
         button.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                button_handler();
-                tv.setText(stringFromJNI());
+                // Test set values function here before bluetooth is done
+                setTextViewValues();
+
 
                 // New window where commands are shown
                 Intent intent = new Intent(MainActivity.this,  ShowCommands.class);
@@ -57,8 +62,25 @@ public class MainActivity extends AppCompatActivity {
      */
     public native String stringFromJNI();
 
-    /**
-     * C++ code that is called when button is pressed
-     */
-    public native void button_handler();
+
+     void setTextViewValues() {
+         // for battery 1
+         TextView voltageView = findViewById(R.id.voltage1);
+
+         TextView currentView = findViewById(R.id.current1);
+
+         TextView ampereHoursView = findViewById(R.id.ampere_hours1);
+
+         battery1.updateTextViews(voltageView, currentView, ampereHoursView);
+
+     // for battery 2
+         voltageView = findViewById(R.id.voltage2);
+
+         currentView = findViewById(R.id.current2);
+
+         ampereHoursView = findViewById(R.id.ampere_hours2);
+
+         battery2.updateTextViews(voltageView, currentView, ampereHoursView);
+
+     }
 }
