@@ -8,6 +8,7 @@ import android.widget.Button;
 import android.widget.Toast;
 import android.view.View;
 
+import com.example.boat_meter.GlobalClass;
 
 
 public class ShowCommands extends AppCompatActivity {
@@ -71,6 +72,9 @@ public class ShowCommands extends AppCompatActivity {
             public void onClick(View v) {
                 String text = editText.getText().toString();
                 if (!text.isEmpty()) {
+
+                    // just testing Send button. Remove this when Bluetooth is implemented
+                    GlobalClass.battery2.setVoltage(Float.parseFloat(text));
                     editText.getText().clear();
                 }
             }

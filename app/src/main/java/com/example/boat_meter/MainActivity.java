@@ -11,7 +11,7 @@ import android.view.View;
 import android.widget.Button;
 import com.example.boat_meter.databinding.ActivityMainBinding;
 
-
+import com.example.boat_meter.GlobalClass;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -20,8 +20,6 @@ public class MainActivity extends AppCompatActivity {
         System.loadLibrary("boat_meter");
     }
 
-    Battery battery1 = new Battery(3.7f, 1.5f, 2000f);
-    Battery battery2 = new Battery(12.7f, 1.5f, 2000f);
 
     private ActivityMainBinding binding;
     Button button;
@@ -31,6 +29,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        GlobalClass.battery1 = new Battery(3.7f, 1.5f, 2000f);
+        GlobalClass.battery2 = new Battery(12.7f, 1.5f, 2000f);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().hide();
@@ -71,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
 
          TextView ampereHoursView = findViewById(R.id.ampere_hours1);
 
-         battery1.updateTextViews(voltageView, currentView, ampereHoursView);
+         GlobalClass.battery1.updateTextViews(voltageView, currentView, ampereHoursView);
 
      // for battery 2
          voltageView = findViewById(R.id.voltage2);
@@ -80,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
 
          ampereHoursView = findViewById(R.id.ampere_hours2);
 
-         battery2.updateTextViews(voltageView, currentView, ampereHoursView);
+         GlobalClass.battery2.updateTextViews(voltageView, currentView, ampereHoursView);
 
      }
 }
