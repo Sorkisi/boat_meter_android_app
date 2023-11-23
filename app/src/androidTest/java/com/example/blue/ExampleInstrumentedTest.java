@@ -1,4 +1,4 @@
-package com.example.boat_meter;
+package com.example.blue;
 
 import android.content.Context;
 
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("com.example.boat_meter", appContext.getPackageName());
+        assertEquals("com.example.blue", appContext.getPackageName());
     }
 }

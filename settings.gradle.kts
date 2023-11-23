@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "boat_meter"
+rootProject.name = "Blue"
 include(":app")

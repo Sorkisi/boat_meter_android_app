@@ -1,17 +1,19 @@
-package com.example.boat_meter;
+package com.example.blue;
+
 
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.EditText;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import android.widget.Button;
-import android.widget.Toast;
 import android.view.View;
 
-import com.example.boat_meter.GlobalClass;
+
 
 
 public class ShowCommands extends AppCompatActivity {
+
 
     String heading = "Help commands";
 
@@ -57,6 +59,8 @@ public class ShowCommands extends AppCompatActivity {
             getSupportActionBar().hide();
         }
 
+        MyBluetoothService myBluetoothService = MainActivity.myBluetoothService;
+
         editText = findViewById(R.id.commandText);
 
         TextView textViewHeading = findViewById(R.id.heading);
@@ -74,11 +78,21 @@ public class ShowCommands extends AppCompatActivity {
                 if (!text.isEmpty()) {
 
                     // just testing Send button. Remove this when Bluetooth is implemented
-                    GlobalClass.battery2.setVoltage(Float.parseFloat(text));
-                    editText.getText().clear();
+                    try {
+                        char startChar = '?'; // Character for '?'
+                        char endChar = '!'; // Character for '!'
+
+                        String toSend = startChar + text + endChar;
+
+                        myBluetoothService.sentData(toSend);
+                        editText.getText().clear();
+                    }catch (NumberFormatException e)
+                    {
+                        editText = findViewById(R.id.commandText);
+                        editText.setText("cannot send bluetooth");
+                    }
                 }
             }
-
         });
     }
 }

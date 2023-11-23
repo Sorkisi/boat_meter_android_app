@@ -1,4 +1,4 @@
-package com.example.boat_meter;
+package com.example.blue;
 
 import org.junit.Test;
 
