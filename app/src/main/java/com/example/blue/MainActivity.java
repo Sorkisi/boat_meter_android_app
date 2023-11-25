@@ -12,6 +12,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 
@@ -22,6 +23,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 import com.example.blue.databinding.ActivityMainBinding;
@@ -46,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_BLUETOOTH_PERMISSION = 3;
 
-
+    Button connectButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,10 +56,6 @@ public class MainActivity extends AppCompatActivity {
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-
-        // Example of a call to a native method
-        TextView tv = binding.sampleText;
-        tv.setText(stringFromJNI());
 
         BluetoothManager bluetoothManager = getSystemService(BluetoothManager.class);
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -93,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
             // Device does not support Bluetooth...
         }
 
-        Button connectButton = findViewById(R.id.connectButton);
+        connectButton = findViewById(R.id.connectButton);
         connectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -119,12 +117,21 @@ public class MainActivity extends AppCompatActivity {
                                 .setSingleChoiceItems(deviceNames, -1, new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
+
+                                        connectButton.setVisibility(View.INVISIBLE);
+
+
                                         // Start the connection
                                         new ConnectThread(devicesArray[which]).start();
                                         // Check for permissions
                                         if (ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.BLUETOOTH) == PackageManager.PERMISSION_GRANTED) {
                                             String name = devicesArray[which].getName();
                                             Log.i("Connect To Device",  name);
+                                            
+                                            // Show Toast that bluetooth is connecting
+                                            Toast.makeText(MainActivity.this, "Connecting to " + name, Toast.LENGTH_SHORT).show();
+
+
                                         } else {
                                             // Permission is not granted. You can request for permission here.
                                             ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.BLUETOOTH}, REQUEST_BLUETOOTH_PERMISSION);
@@ -150,6 +157,11 @@ public class MainActivity extends AppCompatActivity {
      * which is packaged with this application.
      */
     public native String stringFromJNI();
+
+    public void showToast(Context context, String text) {
+        Toast.makeText(context, text, Toast.LENGTH_SHORT).show();
+        connectButton.setVisibility(View.VISIBLE);
+    }
 
     private class ConnectThread extends Thread {
         private final BluetoothDevice mmDevice;
@@ -189,6 +201,15 @@ public class MainActivity extends AppCompatActivity {
                     // until it succeeds or throws an exception.
                     mmSocket.connect();
                 } catch (IOException connectException) {
+                    //Toast.makeText(MainActivity.this, "Bluetooth could not connect", Toast.LENGTH_SHORT).show();
+                    Log.i(TAG, "Could not connect to the bluetooth device");
+
+                    // Show the toast here
+                    runOnUiThread(new Runnable() {
+                        public void run() {
+                            showToast(MainActivity.this, "Bluetooth could not connect");
+                        }
+                    });
                     // Unable to connect; close the socket and return.
                     try {
                         mmSocket.close();
@@ -220,14 +241,13 @@ public class MainActivity extends AppCompatActivity {
                 // Create a new instance of MyBluetoothService
                 myBluetoothService = new MyBluetoothService(bluetoothSocket);
 
-
-
                 // New window where commands are shown
                 Intent intent = new Intent(MainActivity.this,  ShowBatteryValues.class);
                 startActivity(intent);
 
             } else {
                 Log.i("BluetoothConnection", "The device is not connected.");
+
             }
         }
     }

@@ -52,6 +52,37 @@ public class ShowBatteryValues extends AppCompatActivity {
             }
         });
 
+        MyBluetoothService myBluetoothService = MainActivity.myBluetoothService;
+
+        button = findViewById(R.id.reset_button1);
+        button.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+
+                /* Send reset command to bluetooth */
+                String toSend = "?SET1C0!";
+
+                myBluetoothService.sentData(toSend);
+
+            }
+        });
+
+        button = findViewById(R.id.reset_button2);
+        button.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+
+                /* Send reset command to bluetooth */
+                String toSend = "?SET2C0!";
+
+                myBluetoothService.sentData(toSend);
+
+            }
+        });
+
+
 
         // This is the Runnable that will be called every second
         runnable = new Runnable() {

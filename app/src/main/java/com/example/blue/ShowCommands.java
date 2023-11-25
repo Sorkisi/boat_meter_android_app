@@ -31,9 +31,9 @@ public class ShowCommands extends AppCompatActivity {
             "SET2C0 Do not enter value after the command. Reset ampere hours count to zero for battery 2\n" +
 
             "\n" +
-            "SET1C Enter a space and the value after the command. Set current value for battery 1. This can be used to calibrate current measurement\n" +
+            "SET1C Enter a space and the value after the command. Set current value for battery 1. This call adjusts gain. Do not use this for offset. This can be used to calibrate current measurement\n" +
             "\n" +
-            "SET2C Enter a space and the value after the command. Set current value for battery 2. This can be used to calibrate current measurement\n" +
+            "SET2C Enter a space and the value after the command. Set current value for battery 2. This call adjusts gain. Do not use this for offset. This can be used to calibrate current measurement\n" +
 
             "\n" +
             "SETV1 Enter a space and the value after the command. Set voltage reading for battery 1. This can be used to calibrate voltage measurement\n" +

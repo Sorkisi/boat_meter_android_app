@@ -60,6 +60,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Ampere hours"/>
+
+            <Button
+                android:id="@+id/reset_button1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Reset amph"
+                android:layout_centerHorizontal="true"
+                android:layout_alignParentBottom="true"/>
         </LinearLayout>
 
         <LinearLayout
@@ -106,6 +114,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Ampere hours"/>
+
+            <Button
+                android:id="@+id/reset_button2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Reset amph"
+                android:layout_centerHorizontal="true"
+                android:layout_alignParentBottom="true"/>
+
         </LinearLayout>
     </LinearLayout>
 
@@ -118,7 +135,7 @@
             android:id="@+id/commands_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Show commands"
+            android:text="Calibration commands"
             android:layout_centerHorizontal="true"
             android:layout_alignParentBottom="true"/>
     </RelativeLayout>
