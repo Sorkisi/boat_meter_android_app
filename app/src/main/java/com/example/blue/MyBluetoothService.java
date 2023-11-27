@@ -1,5 +1,7 @@
 package com.example.blue;
 
+
+import android.app.Activity;
 import android.bluetooth.BluetoothSocket;
 import android.os.Bundle;
 import android.os.Handler;
@@ -15,7 +17,9 @@ import java.nio.charset.StandardCharsets;
 public class MyBluetoothService {
     private static final String TAG = "MY_APP_DEBUG_TAG";
     private final Handler handler = new Handler(Looper.getMainLooper()) {
-        private StringBuilder messageBuilder = new StringBuilder();
+    private StringBuilder messageBuilder = new StringBuilder();
+
+
 
         @Override
         public void handleMessage(Message msg) {
@@ -30,7 +34,7 @@ public class MyBluetoothService {
                     // Check if the message starts with "STR" and ends with "END"
                     if (messageBuilder.toString().startsWith("STR") && messageBuilder.toString().endsWith("END")) {
                         // Log the complete message
-                        Log.i(TAG, "Complete message: " + messageBuilder.toString());
+//                        Log.i(TAG, "Complete message: " + messageBuilder.toString());
 
                         String message = messageBuilder.toString();
                         // Check that the message is really valid. If yes, give the data to main activity
@@ -67,16 +71,23 @@ public class MyBluetoothService {
                 case MessageConstants.MESSAGE_TOAST:
                     // Handle toast message here
                     break;
+
+                    case MessageConstants.MESSAGE_CONNECTION_LOST:
+                        if (listener != null) {
+                            listener.onConnectionLost();
+                        }
             }
         }
     };
 
 
     private ConnectedThread connectedThread;
-
-    public MyBluetoothService(BluetoothSocket socket) {
+    private ConnectionLostListener listener;
+    public MyBluetoothService(BluetoothSocket socket, ConnectionLostListener listener) {
         connectedThread = new ConnectedThread(socket);
         connectedThread.start();
+        this.listener = listener;
+
     }
 
     public void sentData(String text)
@@ -91,6 +102,7 @@ public class MyBluetoothService {
         public static final int MESSAGE_WRITE = 1;
         public static final int MESSAGE_TOAST = 2;
 
+        public static final int MESSAGE_CONNECTION_LOST = 3;
         // ... (Add other message types here as needed.)
     }
 
@@ -104,6 +116,7 @@ public class MyBluetoothService {
             mmSocket = socket;
             InputStream tmpIn = null;
             OutputStream tmpOut = null;
+
 
             // Get the input and output streams; using temp objects because
             // member streams are final.
@@ -139,6 +152,11 @@ public class MyBluetoothService {
                     readMsg.sendToTarget();
                 } catch (IOException e) {
                     Log.d(TAG, "Input stream was disconnected", e);
+                    // Send a connection lost message to the UI activity.
+                    Message connectionLostMsg = handler.obtainMessage(
+                            MessageConstants.MESSAGE_CONNECTION_LOST);
+                    connectionLostMsg.sendToTarget();
+
                     break;
                 }
             }
@@ -175,7 +193,10 @@ public class MyBluetoothService {
                 Log.e(TAG, "Could not close the connect socket", e);
             }
         }
+
     }
+
+
 
     private void handleBluetoothMessage(float value, int i){
         switch(i){
@@ -205,4 +226,5 @@ public class MyBluetoothService {
                 break;
         }
     }
+
 }

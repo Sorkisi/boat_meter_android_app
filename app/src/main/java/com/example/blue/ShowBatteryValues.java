@@ -17,6 +17,7 @@ import android.widget.Button;
 
 public class ShowBatteryValues extends AppCompatActivity {
 
+    private static ShowBatteryValues instance;
 
     private EditText editText;
     private Button button;
@@ -28,6 +29,8 @@ public class ShowBatteryValues extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.show_battery_values);
+
+        instance = this;
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().hide();
@@ -98,6 +101,11 @@ public class ShowBatteryValues extends AppCompatActivity {
     }
 
 
+    public static void finishActivity() {
+        if (instance != null) {
+            instance.finish();
+        }
+    }
 
     @Override
     protected void onDestroy() {

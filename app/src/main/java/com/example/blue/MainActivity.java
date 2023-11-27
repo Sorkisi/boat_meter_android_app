@@ -32,7 +32,10 @@ import java.io.IOException;
 import java.util.Set;
 import java.util.UUID;
 
-public class MainActivity extends AppCompatActivity {
+
+
+public class MainActivity extends AppCompatActivity{
+
 
     // Used to load the 'blue' library on application startup.
     static {
@@ -49,6 +52,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_BLUETOOTH_PERMISSION = 3;
 
     Button connectButton;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -158,16 +163,21 @@ public class MainActivity extends AppCompatActivity {
      */
     public native String stringFromJNI();
 
+
+
     public void showToast(Context context, String text) {
         Toast.makeText(context, text, Toast.LENGTH_SHORT).show();
         connectButton.setVisibility(View.VISIBLE);
     }
 
-    private class ConnectThread extends Thread {
+
+
+    private class ConnectThread extends Thread implements ConnectionLostListener {
         private final BluetoothDevice mmDevice;
         private final BluetoothSocket mmSocket;
         private final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
         private final String TAG = "ConnectThread";
+        private Intent showBatteryValues;
 
         public ConnectThread(BluetoothDevice device) {
             // Use a temporary object that is later assigned to mmSocket
@@ -239,16 +249,27 @@ public class MainActivity extends AppCompatActivity {
                 Log.i("BluetoothConnection", "The device is connected.");
                 bluetoothSocket = mmSocket;
                 // Create a new instance of MyBluetoothService
-                myBluetoothService = new MyBluetoothService(bluetoothSocket);
+                myBluetoothService = new MyBluetoothService(bluetoothSocket, (ConnectionLostListener) this);
 
                 // New window where commands are shown
-                Intent intent = new Intent(MainActivity.this,  ShowBatteryValues.class);
-                startActivity(intent);
+                showBatteryValues = new Intent(MainActivity.this,  ShowBatteryValues.class);
+                startActivity(showBatteryValues);
 
             } else {
                 Log.i("BluetoothConnection", "The device is not connected.");
 
             }
+        }
+
+        @Override
+        public void onConnectionLost() {
+            bluetoothConnectionLost();
+        }
+
+        public void bluetoothConnectionLost() {
+            Toast.makeText(MainActivity.this, "Bluetooth connection lost ", Toast.LENGTH_SHORT).show();
+            ShowBatteryValues.finishActivity();
+            connectButton.setVisibility(View.VISIBLE);
         }
     }
 
