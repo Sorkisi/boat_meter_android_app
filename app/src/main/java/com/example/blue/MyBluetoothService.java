@@ -21,6 +21,28 @@ public class MyBluetoothService {
 
 
 
+        private byte calculateChecksum(String[] parts, int start, int end) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = start; i < end; i++) {
+                sb.append(parts[i]);
+            }
+            String data = sb.toString();
+            byte checksum = 0;
+            checksum ^= 'S';
+            checksum ^= 'T';
+            checksum ^= 'R';
+            checksum ^= '|';
+            byte[] bytes = data.getBytes();
+            for (byte b : bytes) {
+                char c = (char) b;
+                checksum ^= b;
+                checksum ^= '|';
+            }
+            return checksum;
+        }
+
+
+
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
@@ -33,25 +55,35 @@ public class MyBluetoothService {
 
                     // Check if the message starts with "STR" and ends with "END"
                     if (messageBuilder.toString().startsWith("STR") && messageBuilder.toString().endsWith("END")) {
-                        // Log the complete message
-//                        Log.i(TAG, "Complete message: " + messageBuilder.toString());
-
                         String message = messageBuilder.toString();
-                        // Check that the message is really valid. If yes, give the data to main activity
+                        Log.e(TAG, "Message received: " + message);
                         String[] parts = message.split("\\|");
 
-                        // Check the parts
                         try {
-                            // Try to convert parts 1 to 6 to float
-                            for (int i = 1; i <= 6; i++) {
-                                float value = Float.parseFloat(parts[i]);
-                                handleBluetoothMessage(value, i);
-                            }
 
+                            // Get the checksum from the message
+                            char receivedChecksumChar = parts[7].charAt(0);
+                            byte receivedChecksum = (byte) receivedChecksumChar;
+
+                            // Calculate the checksum of the received data
+                            byte calculatedChecksum = calculateChecksum(parts, 1, 7);
+
+                            // Compare the received and calculated checksums
+                            if (receivedChecksum != calculatedChecksum) {
+                                Log.e(TAG, "Checksum error: received " + receivedChecksum + ", calculated " + calculatedChecksum);
+                            } else {
+                                Log.e(TAG, "Checksum correct " + receivedChecksum);
+                                // Try to convert parts 1 to 6 to float
+                                for (int i = 1; i <= 6; i++) {
+                                    float value = Float.parseFloat(parts[i]);
+                                    handleBluetoothMessage(value, i);
+                                }
+                            }
 
                         } catch (NumberFormatException e) {
                             Log.e(TAG, "Error parsing float value", e);
                         }
+
 
                         // Clear the message builder
                         messageBuilder.setLength(0);
@@ -59,6 +91,7 @@ public class MyBluetoothService {
                         // Clear the message builder
                         messageBuilder.setLength(0);
                     }
+
                     break;
                 case MessageConstants.MESSAGE_WRITE:
                     byte[] writeBuf = (byte[]) msg.obj;
@@ -228,3 +261,4 @@ public class MyBluetoothService {
     }
 
 }
+
