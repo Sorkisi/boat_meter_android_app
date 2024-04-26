@@ -1,264 +1,134 @@
 package com.example.blue;
 
 
+import android.Manifest;
 import android.app.Activity;
-import android.bluetooth.BluetoothSocket;
-import android.os.Bundle;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattService;
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 public class MyBluetoothService {
+
+
+    private Activity activity;
     private static final String TAG = "MY_APP_DEBUG_TAG";
-    private final Handler handler = new Handler(Looper.getMainLooper()) {
-    private StringBuilder messageBuilder = new StringBuilder();
 
+    private static final int REQUEST_ENABLE_BT = 2;
+    private static final int REQUEST_BLUETOOTH_PERMISSIONS = 3;
 
-
-        private byte calculateChecksum(String[] parts, int start, int end) {
-            StringBuilder sb = new StringBuilder();
-            for (int i = start; i < end; i++) {
-                sb.append(parts[i]);
-            }
-            String data = sb.toString();
-            byte checksum = 0;
-            checksum ^= 'S';
-            checksum ^= 'T';
-            checksum ^= 'R';
-            checksum ^= '|';
-            byte[] bytes = data.getBytes();
-            for (byte b : bytes) {
-                char c = (char) b;
-                checksum ^= b;
-                checksum ^= '|';
-            }
-            return checksum;
-        }
-
-
-
+    private Handler readHandler = new Handler(Looper.getMainLooper());
+    private Runnable readRunnable = new Runnable() {
         @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case MessageConstants.MESSAGE_READ:
-                    // Convert the read bytes into a string
-                    String readMessage = new String((byte[]) msg.obj, 0, msg.arg1);
-
-                    // Append the message to the builder
-                    messageBuilder.append(readMessage);
-
-                    // Check if the message starts with "STR" and ends with "END"
-                    if (messageBuilder.toString().startsWith("STR") && messageBuilder.toString().endsWith("END")) {
-                        String message = messageBuilder.toString();
-                        Log.e(TAG, "Message received: " + message);
-                        String[] parts = message.split("\\|");
-
-                        try {
-
-                            // Get the checksum from the message
-                            char receivedChecksumChar = parts[7].charAt(0);
-                            byte receivedChecksum = (byte) receivedChecksumChar;
-
-                            // Calculate the checksum of the received data
-                            byte calculatedChecksum = calculateChecksum(parts, 1, 7);
-
-                            // Compare the received and calculated checksums
-                            if (receivedChecksum != calculatedChecksum) {
-                                Log.e(TAG, "Checksum error: received " + receivedChecksum + ", calculated " + calculatedChecksum);
-                            } else {
-                                Log.e(TAG, "Checksum correct " + receivedChecksum);
-                                // Try to convert parts 1 to 6 to float
-                                for (int i = 1; i <= 6; i++) {
-                                    float value = Float.parseFloat(parts[i]);
-                                    handleBluetoothMessage(value, i);
-                                }
-                            }
-
-                        } catch (NumberFormatException e) {
-                            Log.e(TAG, "Error parsing float value", e);
-                        }
-
-
-                        // Clear the message builder
-                        messageBuilder.setLength(0);
-                    } else if(messageBuilder.toString().endsWith("D")) {
-                        // Clear the message builder
-                        messageBuilder.setLength(0);
-                    }
-
-                    break;
-                case MessageConstants.MESSAGE_WRITE:
-                    byte[] writeBuf = (byte[]) msg.obj;
-                    // construct a string from the buffer
-                    String writeMessage = new String(writeBuf);
-                    Log.i(TAG, "Message sent: " + writeMessage);
-                    // You can also update your UI here
-                    break;
-
-                case MessageConstants.MESSAGE_TOAST:
-                    // Handle toast message here
-                    break;
-
-                    case MessageConstants.MESSAGE_CONNECTION_LOST:
-                        if (listener != null) {
-                            listener.onConnectionLost();
-                        }
-            }
+        public void run() {
+            readData();
+            readHandler.postDelayed(this, 3000);  // Schedule to run again in 1 second
         }
     };
 
+    // Method to start reading data
+    public void startReading() {
+        Log.e("BLE","Start ble read hander");
+        readHandler.post(readRunnable);
+    }
 
-    private ConnectedThread connectedThread;
-    private ConnectionLostListener listener;
-    public MyBluetoothService(BluetoothSocket socket, ConnectionLostListener listener) {
-        connectedThread = new ConnectedThread(socket);
-        connectedThread.start();
+
+    public MyBluetoothService(Activity activity, BluetoothGatt gatt, ConnectionLostListener listener) {
+        this.activity = activity;  // And this line
+        this.bluetoothGatt = gatt;
         this.listener = listener;
-
     }
 
-    public void sentData(String text)
-    {
-        connectedThread.write(text.getBytes(StandardCharsets.UTF_8));
-    }
 
-    // Defines several constants used when transmitting messages between the
-    // service and the UI.
-    private interface MessageConstants {
-        public static final int MESSAGE_READ = 0;
-        public static final int MESSAGE_WRITE = 1;
-        public static final int MESSAGE_TOAST = 2;
+    private BluetoothGatt bluetoothGatt;
+    private ConnectionLostListener listener;
+    private final String CUSTOM_READ_SERVICE_UUID = "78563412-f0de-bc9a-0000-000112345678";
 
-        public static final int MESSAGE_CONNECTION_LOST = 3;
-        // ... (Add other message types here as needed.)
-    }
+    // Define a UUID for your custom characteristic
+    private final String CUSTOM_READ_CHAR_UUID = "78563412-f0de-bc9a-0000-000112345678";
 
-    private class ConnectedThread extends Thread {
-        private final BluetoothSocket mmSocket;
-        private final InputStream mmInStream;
-        private final OutputStream mmOutStream;
-        private byte[] mmBuffer; // mmBuffer store for the stream
-
-        public ConnectedThread(BluetoothSocket socket) {
-            mmSocket = socket;
-            InputStream tmpIn = null;
-            OutputStream tmpOut = null;
+    private final String CUSTOM_WRITE_SERVICE = "00000000-0000-0000-0000-00BCF0BC7834";
+    private final String CUSTOM_WRITE_CHAR_UUID = "00000000-0000-0000-0000-00BDF0BC7834";
 
 
-            // Get the input and output streams; using temp objects because
-            // member streams are final.
-            try {
-                tmpIn = socket.getInputStream();
-            } catch (IOException e) {
-                Log.e(TAG, "Error occurred when creating input stream", e);
-            }
-            try {
-                tmpOut = socket.getOutputStream();
-            } catch (IOException e) {
-                Log.e(TAG, "Error occurred when creating output stream", e);
-            }
+    public void sendData(String text) {
+        // Convert the text string to bytes
+        byte[] data = text.getBytes(Charset.forName("UTF-8"));
 
-            mmInStream = tmpIn;
-            mmOutStream = tmpOut;
-        }
+        // Get the custom service
+        UUID serviceUUID = UUID.fromString(CUSTOM_WRITE_SERVICE);
+        BluetoothGattService service = bluetoothGatt.getService(serviceUUID);
 
-        public void run() {
-            mmBuffer = new byte[1024];
-            int numBytes; // bytes returned from read()
+        if (service != null) {
+            // Get the custom characteristic
+            UUID charUUID = UUID.fromString(CUSTOM_WRITE_CHAR_UUID);
+            BluetoothGattCharacteristic characteristic = service.getCharacteristic(charUUID);
 
-            // Keep listening to the InputStream until an exception occurs.
-            while (true) {
-                try {
-                    // Read from the InputStream.
-                    numBytes = mmInStream.read(mmBuffer);
+            if (characteristic != null) {
+                // Set the characteristic value
+                characteristic.setValue(data);
+                Log.e("BLE", "Sending  data" + text);
 
-                    // Send the obtained bytes to the UI activity.
-                    Message readMsg = handler.obtainMessage(
-                            MessageConstants.MESSAGE_READ, numBytes, -1,
-                            mmBuffer);
-                    readMsg.sendToTarget();
-                } catch (IOException e) {
-                    Log.d(TAG, "Input stream was disconnected", e);
-                    // Send a connection lost message to the UI activity.
-                    Message connectionLostMsg = handler.obtainMessage(
-                            MessageConstants.MESSAGE_CONNECTION_LOST);
-                    connectionLostMsg.sendToTarget();
+                if (ContextCompat.checkSelfPermission(activity, Manifest.permission.BLUETOOTH) == PackageManager.PERMISSION_GRANTED &&
+                        ContextCompat.checkSelfPermission(activity, Manifest.permission.BLUETOOTH_ADMIN) == PackageManager.PERMISSION_GRANTED &&
+                        ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
 
-                    break;
+                    // Write the characteristic value
+                    bluetoothGatt.writeCharacteristic(characteristic);
+                } else {
+                    // The app does not have the necessary permissions
+                    Log.e("BLE", "App does not have the necessary permissions to write characteristic.");
                 }
             }
         }
-
-
-        public void write(byte[] bytes) {
-            try {
-                mmOutStream.write(bytes);
-
-                // Share the sent message with the UI activity.
-                Message writtenMsg = handler.obtainMessage(
-                        MessageConstants.MESSAGE_WRITE, -1, -1, bytes);
-                writtenMsg.sendToTarget();
-            } catch (IOException e) {
-                Log.e(TAG, "Error occurred when sending data", e);
-
-                // Send a failure message back to the activity.
-                Message writeErrorMsg =
-                        handler.obtainMessage(MessageConstants.MESSAGE_TOAST);
-                Bundle bundle = new Bundle();
-                bundle.putString("toast",
-                        "Couldn't send data to the other device");
-                writeErrorMsg.setData(bundle);
-                handler.sendMessage(writeErrorMsg);
-            }
-        }
-
-        // Call this method from the main activity to shut down the connection.
-        public void cancel() {
-            try {
-                mmSocket.close();
-            } catch (IOException e) {
-                Log.e(TAG, "Could not close the connect socket", e);
-            }
-        }
-
     }
 
 
+    public void readData() {
+        // Check if the necessary permissions are granted
 
-    private void handleBluetoothMessage(float value, int i){
-        switch(i){
+        if (ContextCompat.checkSelfPermission(activity, Manifest.permission.BLUETOOTH_CONNECT)
+                == PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(activity, Manifest.permission.BLUETOOTH_SCAN)
+                        == PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED) {
 
-            case 1:
-                GlobalClass.battery1.setVoltage(value);
-                break;
-            case 2:
-                GlobalClass.battery1.setCurrent(value);
-                break;
-            case 3:
-                GlobalClass.battery1.setAmpereHours(value);
-                break;
+            // Get the service and characteristic to read from
+            BluetoothGattService service = bluetoothGatt.getService(UUID.fromString(CUSTOM_READ_SERVICE_UUID));
+            // check if service is found and correct
+            if (service != null) {
+                if(service.getUuid().equals(UUID.fromString(CUSTOM_READ_SERVICE_UUID))) {
 
-            case 4:
-                GlobalClass.battery2.setVoltage(value);
-                break;
+                    BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(CUSTOM_READ_CHAR_UUID));
 
-            case 5:
-                GlobalClass.battery2.setCurrent(value);
+                    // Initiate a read operation
+                    bluetoothGatt.readCharacteristic(characteristic);
+                } else {
+                    Log.e("BLE", CUSTOM_READ_SERVICE_UUID+" is not the same as " + service.getUuid());
+                }
+            } else {
+                Log.e("BLE", "Service with UUID " + CUSTOM_READ_SERVICE_UUID + " doesn't exist");
+            }
 
-            case 6:
-                GlobalClass.battery2.setAmpereHours(value);
-                break;
-
-            default:
-                break;
+        } else {
+            Log.e("BLE","Ei lupia");
+            // If permissions are not granted, request them
+            ActivityCompat.requestPermissions(activity,
+                    new String[]{Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_BLUETOOTH_PERMISSIONS);
         }
     }
-
 }
-

@@ -84,7 +84,7 @@ public class ShowCommands extends AppCompatActivity {
 
                         String toSend = startChar + text + endChar;
 
-                        myBluetoothService.sentData(toSend);
+                        myBluetoothService.sendData(toSend);
                         editText.getText().clear();
                     }catch (NumberFormatException e)
                     {

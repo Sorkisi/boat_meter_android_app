@@ -66,7 +66,7 @@ public class ShowBatteryValues extends AppCompatActivity {
                 /* Send reset command to bluetooth */
                 String toSend = "?SET1C0!";
 
-                myBluetoothService.sentData(toSend);
+                myBluetoothService.sendData(toSend);
 
             }
         });
@@ -80,7 +80,7 @@ public class ShowBatteryValues extends AppCompatActivity {
                 /* Send reset command to bluetooth */
                 String toSend = "?SET2C0!";
 
-                myBluetoothService.sentData(toSend);
+                myBluetoothService.sendData(toSend);
 
             }
         });
